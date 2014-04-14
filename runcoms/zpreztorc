@@ -1,11 +1,4 @@
 #
-# Sets Prezto options.
-#
-# Authors:
-#   Sorin Ionescu <sorin.ionescu@gmail.com>
-#
-
-#
 # General
 #
 
@@ -32,6 +25,10 @@ zstyle ':prezto:load' pmodule \
   'spectrum' \
   'utility' \
   'completion' \
+  'ssh' \
+  'archive' \
+  'terminal' \
+  'git' \
   'prompt'
 
 #

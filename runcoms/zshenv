@@ -1,12 +1,52 @@
 #
 # Defines environment variables.
 #
-# Authors:
-#   Sorin Ionescu <sorin.ionescu@gmail.com>
-#
 
 # Ensure that a non-login, non-interactive shell has a defined environment.
 if [[ "$SHLVL" -eq 1 && ! -o LOGIN && -s "${ZDOTDIR:-$HOME}/.zprofile" ]]; then
   source "${ZDOTDIR:-$HOME}/.zprofile"
 fi
 
+export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
+
+export EXINIT="set ts=8 redraw sh=$SHELL dir=/tmp showmode smartindent nows ruler nowrapscan"
+
+export WORDCHARS="*?_-.[]~=&!#$%^(){}<>"
+export ZLE_RPROMPT_INDENT=0
+
+export    ecd=ec.coraid.com
+export     dt=$HOME/Desktop
+export     db=$HOME/Dropbox
+export     dl=$HOME/Downloads
+export   nook=/media/NOOK
+
+export EC_USERNAME=admin
+export EC_PASSWORD=ChangeMe\!
+export EC_LOGIN=test
+export EC_CERTS=TRUST_ALL
+
+export EC_YAML_DIR=$HOME/yaml
+
+export sasi=$HOME/sasi
+export      core=$sasi/src/main/scala/core
+export  restypes=$sasi/src/main/scala/restypes
+export resources=$sasi/src/main/resources
+
+HISTSIZE=10000
+SAVEHIST=10000
+
+DEBIAN_PREVENT_KEYBOARD_CHANGES=yes
+
+setopt \
+  auto_param_keys \
+  auto_param_slash \
+  auto_remove_slash \
+  complete_aliases \
+  list_packed \
+  case_glob \
+  case_match \
+  magic_equal_subst \
+  numeric_glob_sort \
+  rc_expand_param \
+  extended_history \
+  hist_allow_clobber
