@@ -94,7 +94,7 @@ line() {
 
 psg() { ps -ef | egrep  "$@|UID" | grep -v grep }
 
-a ie='vared -M viins 2>/dev/null'  # inline edit; gives weird error
+a ie=vared
 
 ##### Directories
 
@@ -103,7 +103,7 @@ md () { mkdir -p "$1"            }
 md.() { mkdir -p "$1" && cd "$1" }
 
 # nd names a directory; cnd cd's to a named directory.
- nd() { export $1="$PWD"; : ~$1 }
+ nd() { export $1="${2:-PWD}"; : ~$1 }
 cnd() { cd "$1" }
 compctl -n cnd
 
