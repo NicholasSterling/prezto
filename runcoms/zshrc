@@ -1,7 +1,3 @@
-#
-# Executes commands at the start of an interactive session.
-#
-
 # Source Prezto.
 if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/init.zsh" ]]; then
   source "${ZDOTDIR:-$HOME}/.zprezto/init.zsh"
@@ -13,12 +9,11 @@ bindkey -v
 
 autoload zed
 
-typeset -U path
+########## Interactive tools
 
-### Ask a y/n question and succeed if y.
-### e.g.   ask Delete $file && rm $file
-###        ask -n Delete $file && rm $file  # defaults to n
-
+# Ask a y/n question and succeed if y.
+# e.g.   ask Delete $file && rm $file
+#        ask -n Delete $file && rm $file  # defaults to n
 ask() {
   local default
   local response
@@ -28,40 +23,72 @@ ask() {
   while :; do
     echo -n "$@"'? '
     [ "$default" ] && echo -n "($default) "
-    read -q response
+    read -q yn
     echo ""
-    [ "$response" = $'\n' ] && response="$default"
-    [ "$response" = y ] && return 0
-    [ "$response" = n ] && return 1
+    [ "$yn" = $'\n' ] && yn="$default"
+    [ "$yn" = y ] && return 0
+    [ "$yn" = n ] && return 1
     echo "Please enter y or n"
   done
 }
 
+########## Basics
+
 alias a=alias
+
 a \?='whence -vafs'
 a \?m='noglob whence -vafsm'
-a .z='. ~/.zprofile; . ~/.zshenv; . ~/.zshrc'
-a v.z='v ~/.{zprofile,zshenv,zshrc}'
-a dos2unix=fromdos
+
+a ie=vared
 a fn='zed -f'
 compctl -F fn
-
-a git_sasi=' git clone git@github.com:Coraid/sasi.git '
 
 a rmb='rm *~'
 a rmrb='rm **/*~'
 
-a h='history -iD'
-a -g ,o='$(eval `fc -ln -1`)'  # output of last cmd (which gets re-executed)
+a dos2unix=fromdos
 
 a cx='chmod +x'
+
+a wsdiff='sdiff -w179'
+
+a nobuf='stdbuf -oL'  # actually, it's still buffered by line
 
 setenv() { export $1="$2" }     # for compatibility with simple csh scripts
 
 say+do() { echo "$@"; "$@" }            # say it, then do it
 warn()   { echo "$@" 1>&2 }             # say to stderr
 
+diskhogs() { du -ak | sed -n '/^[0-9]\{3\}/p' | sort -rn | $PAGER }
+ cpuhogs() { ps -eo pcpu,pid,user,comm        | sort -rn | $PAGER }
+
+psg() { ps -ef | egrep  "$@|UID" | grep -v grep }
+
+########## .z* Files
+
+a  .z='. ~/.{zprofile,zshenv,zshrc}'
+a e.z='e ~/.{zprofile,zshenv,zshrc}'
+a e.p='e ~/.zprofile'
+a e.c='e ~/.zshrc'
+a e.v='e ~/.zshenv'
+
+########## History stuff
+
+a h='history -iD'
+a -g ,o='$(eval `fc -ln -1`)'  # output of last cmd (which gets re-executed)
+
+########## Line stuff
+
 a lines='print -lr'
+
+a num='nl -ba'
+
+# Show just the specified (by number) line.
+line() {
+  local num
+  num=$1 shift
+  sed -ne "${num}p" "$@"
+}
 
 # Grab selections to make a doc.
 got=$HOME/got
@@ -79,24 +106,7 @@ grab() {
   done 3>$got
 }
 
-diskhogs() { du -ak | sed -n '/^[0-9]\{3\}/p' | sort -rn | $PAGER }
- cpuhogs() { ps -eo pcpu,pid,user,comm        | sort -rn | $PAGER }
-
-a num='nl -ba'
-a wsdiff='sdiff -w179'
-
-# Show just the specified (by number) line.
-line() {
-  local num
-  num=$1 shift
-  sed -ne "${num}p" "$@"
-}
-
-psg() { ps -ef | egrep  "$@|UID" | grep -v grep }
-
-a ie=vared
-
-##### Directories
+########## Directory stuff
 
 # cd to a directory, creating it if it doesn't exist.
 md () { mkdir -p "$1"            }
@@ -160,13 +170,21 @@ wd_completions2() {
 }
 compctl -x 'p[1]' -K wd_completions1 - 'p[2]' -K wd_completions2 -- wd
 
-# . with no args does cd -
-. () { [ $# -eq 0 ] && cd - || builtin . "$@" }
-a      ..='cd .. && lf'
-a     ...='cd ../.. && lf'
-a    ....='cd ../../.. && lf'
-a   .....='cd ../../../.. && lf'
-a  ......='cd ../../../../.. && lf'
+# . with no args does cd -; with args sources them all.
+. () {
+  if [ $# = 0 ]; then
+    cd -
+  else
+    local f
+    for f; builtin . "$f"
+  fi
+}
+
+a      ..='cd                .. && lf'
+a     ...='cd             ../.. && lf'
+a    ....='cd          ../../.. && lf'
+a   .....='cd       ../../../.. && lf'
+a  ......='cd    ../../../../.. && lf'
 a .......='cd ../../../../../.. && lf'
 
 # Path display/manipulation.  See also 'v path'
@@ -174,13 +192,13 @@ path() { lines $path }
 +path() { PATH="$1:$PATH"; path }
 path+() { PATH="$PATH:$1"; path }
 
-##### Time
+########## Time stuff
 
  dateInSecs() { date +%s }
  secsToDate() {      date -d @$1                            '+%Y-%m-%d %H:%M:%S' }
 msecsToDate() { d=$( date -d @$( echo $1 | sed 's/...$//' ) '+%Y-%m-%d %H:%M:%S' ); echo $d.$( echo $1 | sed 's/.*\(...\)/\1/' ) }
 
-##### Archives
+########## Archive stuff
 
 function grepJars {
   what=`echo "$1" | sed s:\\\\.:/:g`
@@ -189,7 +207,7 @@ function grepJars {
   done
 }
 
-##### Curl
+########## Curl stuff
 
 # curl with cookie jar; put/post @file or string
 export CU_URL=http://localhost:8080
@@ -231,8 +249,6 @@ cu_() {
     shift
     curl -b "$CU_JAR" "$url" "$@"
 }
-cu-nicon () { cu_ "Debug/NICMetricsOn"  -d ""; }
-cu-nicoff() { cu_ "Debug/NICMetricsOff" -d ""; }
 a cu-yaml=" noglob cu-yaml_ "
 a cu-csv="  noglob cu-csv_  "
 a cu-text=" noglob cu-text_ "
@@ -253,6 +269,9 @@ You can use @file instead of literal data.
 
 EOF
 }
+
+########## SASI stuff
+
  task() { curl           -sD -         $sc_url/Task/$1 ; }
  getP() { curl           -sD -         $sc_url/Path$1  ; }
 postP() { curl           -sD - -d "$2" $sc_url/Path$1  ; }
@@ -263,16 +282,17 @@ postP() { curl           -sD - -d "$2" $sc_url/Path$1  ; }
 # sk kills SASI jobs (core.Boot).
 sk() { kill $( psg java | fgrep core.Boot | awk '{ print $2 }' ) }
 
-a nobuf='stdbuf -oL'  # actually, it's still buffered by line
-
 # Shows a subset of the available events.
 a eventgrep='nobuf events | grep'
 
-##### A calculator using (( )).
-#####   , 3.5 * 8
-#####   / 7
-#####   -
-##### For trig, rand, more:  zmodload zsh/mathfunc
+########## A calculator using (( ))
+
+# e.g.
+#     , 3.5 * 8
+#     / 7
+#     z / ( z + 1 )
+#     -
+# For trig, rand, more:  zmodload zsh/mathfunc
 
 typeset -F z=0.0
 a calc='noglob calc_'
@@ -314,6 +334,9 @@ round() {    # z = $1 (or $z) rounded to nearest integer
   echo $int
 }
   
+########## Git stuff
+
+a git_sasi=' git clone git@github.com:Coraid/sasi.git '
 
 # Commit staged changes with the JIRA magic to close an issue.
 function gjc {   # e.g. gjc 219 Blah blah blah
@@ -329,30 +352,34 @@ function gjca {   # e.g. gjca 219 Blah blah blah
   say+do git commit -am "USM-$nnn #resolve $*"
 }
 
-##########
+########## Key bindings
 
-bindkey '^[[Z' reverse-menu-complete
-bindkey ''   undo
-bindkey ''   describe-key-briefly
-bindkey '^O'   overwrite-mode
+# Binds a key to both vi modes.
+bindvi() {
+  local map
+  for map in viins vicmd
+  bindkey -M $map $1 $2
+}
 
-keys() { cat <<EOF
+bindvi  '' push-input
+bindvi  '' describe-key-briefly
+bindvi  '^H' run-help
+bindvi  '^U' vi-kill-line
+bindvi  '^N' accept-and-infer-next-history
 
-         ^\  describes next key
-         ^/  undo
-         ^J pushes input
-         ^u  kill line
-         ^k  kill line to right
-         ^o  toggle overwrite mode
-      Alt-h  help (man page) for cmd
-      Alt-d  delete word
-      Alt-b  back word
-      Alt-f  fore word
-      Alt-t  xpos word
-      Alt-d  kill word
- Ctrl-Alt-h  kill word backwards
- Ctrl-Alt-g  send break
-  Shift-TAB  reverse menu complete
+bindkey '^O' accept-and-menu-complete
+
+keys() { <<EOF
+
+Some interesting keys:
+
+  ^\  stashes input, letting you type another command first
+  ^/  describes next key
+  ^H  shows help for this command
+  ^W  erase previous word (in insert mode)
+  ^O  accept item (during menu completion with ^I)
+  ^N  execute and infer next history
+  ^U  kill line
 
 See also:
   bindkey
