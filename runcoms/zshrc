@@ -36,10 +36,8 @@ ask() {
 
 alias a=alias
 
-a \?='whence -vafs'
-a \?m='noglob whence -vafsm'
+a \?='noglob whence -vafsm'
 
-a ie=vared
 a fn='zed -f'
 compctl -F fn
 
@@ -63,6 +61,8 @@ diskhogs() { du -ak | sed -n '/^[0-9]\{3\}/p' | sort -rn | $PAGER }
  cpuhogs() { ps -eo pcpu,pid,user,comm        | sort -rn | $PAGER }
 
 psg() { ps -ef | egrep  "$@|UID" | grep -v grep }
+
+a col='cut -d\  -f'  # overrides useless /usr/bin/col
 
 ########## .z* Files
 
@@ -109,8 +109,8 @@ grab() {
 ########## Directory stuff
 
 # cd to a directory, creating it if it doesn't exist.
-md () { mkdir -p "$1"            }
-md.() { mkdir -p "$1" && cd "$1" }
+md () { mkdir "$1"            }
+md.() { mkdir "$1" && cd "$1" }
 
 # nd names a directory; cnd cd's to a named directory.
  nd() { export $1="${2:-PWD}"; : ~$1 }
@@ -133,15 +133,15 @@ v() {
     if [ $1 = path ]; then
       local lpath
       lpath=$( path )
-      ie lpath
+      vared lpath
       path=( "${=lpath}" )
     else
-      ie $1
+      vared $1
     fi
   else  # default is PWD
     local dir
     dir="$PWD"
-    ie dir
+    vared dir
     cd "$dir"
   fi
 }
@@ -154,8 +154,8 @@ pd() {
   local num
   read -k num
   echo ''
-  [ "$num" = $'\n' ] && pushd +1 && return
-  [ "$num" -gt 0   ] && pushd +$num
+  [ "$num" = $'\n' ] && num=1
+  [ "$num" = 0 ] || pushd +$num
 }
 
 # Warp to a similar directory -- one path component replaced.
@@ -170,22 +170,15 @@ wd_completions2() {
 }
 compctl -x 'p[1]' -K wd_completions1 - 'p[2]' -K wd_completions2 -- wd
 
-# . with no args does cd -; with args sources them all.
+# . with args sources them all.  Could do something special if no args.
 . () {
   if [ $# = 0 ]; then
-    cd -
+    echo ". what?"
   else
     local f
     for f; builtin . "$f"
   fi
 }
-
-a      ..='cd                .. && lf'
-a     ...='cd             ../.. && lf'
-a    ....='cd          ../../.. && lf'
-a   .....='cd       ../../../.. && lf'
-a  ......='cd    ../../../../.. && lf'
-a .......='cd ../../../../../.. && lf'
 
 # Path display/manipulation.  See also 'v path'
 path() { lines $path }
@@ -207,7 +200,55 @@ function grepJars {
   done
 }
 
-########## Curl stuff
+########## Misc
+
+# Generate some lines of test data.
+tst() {
+  local i
+  for i in {1..${1:-5}}; echo $i{0..9}
+}
+
+# Insert a line before the specified line.
+# e.g.  cat foo | before_line 7 This line was inserted.
+before_line() {
+  local n
+  n="$1"
+  shift
+  sed "$n i\
+$*"
+}
+
+a ports="lsof -i"
+
+# stdjoin handles a typical case of joining two files, e.g.
+# stdjoin /etc/{passwd,shadow} 1,3,4 1,2 :
+# stdjoin File1 File2 Cols1 [ Cols2 [ Delim [KeyCols] ] ]
+# defaults:                   Cols1     ,       1
+stdjoin () {
+  if (( $# < 3 )); then
+    usage "stdjoin File1 File2 Cols1 [ Cols2 [ Delim [KeyCols] ] ]"
+    return 1
+  fi
+  local delim=${5:-,} 
+  join -t $delim -j ${6:-1} \
+    <( cut -d $delim -f $3       $1 | sort ) \
+    <( cut -d $delim -f ${4:-$3} $2 | sort )
+}
+
+
+# Convert ... to ../.. and so on.
+rationalise-dot() {
+  if [[ $LBUFFER = *.. ]]; then
+    LBUFFER+=/..
+  else
+    LBUFFER+=.
+  fi
+}
+zle -N rationalise-dot
+bindkey . rationalise-dot
+
+
+########## Curl stuff; this should probably be moved out of here
 
 # curl with cookie jar; put/post @file or string
 export CU_URL=http://localhost:8080
@@ -270,7 +311,7 @@ You can use @file instead of literal data.
 EOF
 }
 
-########## SASI stuff
+########## SASI stuff (curl part broken now because of SSL)
 
  task() { curl           -sD -         $sc_url/Task/$1 ; }
  getP() { curl           -sD -         $sc_url/Path$1  ; }
@@ -280,7 +321,9 @@ postP() { curl           -sD - -d "$2" $sc_url/Path$1  ; }
  dump() { curl           -sD -         $sc_url/Dump    ; }
 
 # sk kills SASI jobs (core.Boot).
-sk() { kill $( psg java | fgrep core.Boot | awk '{ print $2 }' ) }
+sk() { kill $(
+  psg java | fgrep core.Boot | col 2
+) }
 
 # Shows a subset of the available events.
 a eventgrep='nobuf events | grep'
