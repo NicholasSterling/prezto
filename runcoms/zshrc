@@ -75,6 +75,7 @@ a e.v='e ~/.zshenv'
 ########## History stuff
 
 a h='history -iD'
+a gethistory='fc -RI'
 a -g ,o='$(eval `fc -ln -1`)'  # output of last cmd (which gets re-executed)
 
 ########## Line stuff

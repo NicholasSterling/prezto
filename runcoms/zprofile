@@ -46,6 +46,7 @@ export EC_CERTS=TRUST_ALL
 
 export EC_YAML_DIR=$HOME/yaml
 
+export GIT_SSH=$HOME/bin/ssh4git
 export sasi=$HOME/sasi
 export      core=$sasi/src/main/scala/core
 export  restypes=$sasi/src/main/scala/restypes
@@ -76,6 +77,8 @@ path=(
   /usr/local/bin
   /usr/bin/X11
   ~/bin
+	~/scala/bin
+	~/coraiddevtools/bin
 )
 
 #
@@ -120,3 +123,5 @@ setopt \
   extended_history \
   hist_allow_clobber
 
+unsetopt \
+  share_history
