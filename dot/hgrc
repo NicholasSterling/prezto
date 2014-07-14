@@ -1,0 +1,67 @@
+# Do this in your ~/.hgrc (replacing nsterling with your own ldap username):
+#
+# [ui]
+# username = nsterling@coraid.com
+#
+# [auth]
+# hg.username = nsterling
+#
+# %include /our/dot/hgrc
+#
+
+[auth]
+hg.prefix = hg.coraid.com
+hg.schemes = https
+
+[hostfingerprints]
+hg.coraid.com = 67:e6:8a:5c:b4:10:41:2c:33:a4:12:ec:23:8b:b4:e4:88:d2:9c:e5
+
+[extensions]
+purge =
+schemes =
+transplant =
+extdiff =
+hgext.fetch =
+mercurial_keyring =
+rebase =
+color =
+progress =
+graphlog =
+hgk =
+
+[schemes]
+hg = https://hg.coraid.com/
+
+[hgk]
+path=/our/bin/hgk
+# invoke as "hg view"
+
+####### The remainder is for extdiff.
+
+[extdiff]
+cmd.interdiff = hg-interdiff
+cmd.opendiff = /our/bin/opendiff_hg.sh
+
+# Add new command that runs GNU diff(1) in 'context diff' mode
+cmd.cdiff = gdiff
+opts.cdiff = -Nprc5
+
+# Similarly, a command that runs GNU diff(1) in 'side-by-side' mode
+cmd.ydiff = gdiff
+opts.ydiff = -Npry
+
+# Add new command  kdiff3
+cmd.kdiff3 =
+
+# Add new command called meld, runs meld (no need to name twice)
+cmd.meld =
+
+# Add new command called vimdiff, runs gvimdiff with DirDiff plugin
+# (See http://www.vim.org/scripts/script.php?script_id=102)
+# Non English user, put "let g:DirDiffDynamicDiffText = 1" in your .vimrc
+cmd.vimdiff = gvim
+opts.vimdiff = -f '+next' '+execute "DirDiff" fnameescape(argv(0)) fnameescape(argv(1))'
+
+# Add new command called ediff, runs emacs diff.
+cmd.ediff = sh
+opts.ediff = -c 'if [ -d $0 ]; then emacs --eval "(ediff-directories \"$0\" \"$1\" \"\")"; else emacs --eval "(ediff-files \"$0\" \"$1\")"; fi

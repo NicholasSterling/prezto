@@ -1,0 +1,9 @@
+[user]
+	name = Nicholas Sterling
+	email = nsterling@coraid.com
+[core]
+	editor = vim
+[push]
+	default = simple
+[gits]
+	debug = on
